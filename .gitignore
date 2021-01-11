@@ -84,5 +84,10 @@ GTAGS
 *~
 \#*#
 
+# out-kernel
+out
+toolchain
+build.sh
+
 # Generated source files
 smd_rpc_sym.c
