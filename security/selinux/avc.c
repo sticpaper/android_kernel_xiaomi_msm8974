@@ -107,6 +107,7 @@ static inline int avc_hash(u32 ssid, u32 tsid, u16 tclass)
 	return (ssid ^ (tsid<<2) ^ (tclass<<4)) & (AVC_CACHE_SLOTS - 1);
 }
 
+#ifdef CONFIG_AUDIT
 /**
  * avc_dump_av - Display an access vector in human-readable form.
  * @tclass: target security class
@@ -173,6 +174,7 @@ static void avc_dump_query(struct audit_buffer *ab, u32 ssid, u32 tsid, u16 tcla
 	BUG_ON(tclass >= ARRAY_SIZE(secclass_map));
 	audit_log_format(ab, " tclass=%s", secclass_map[tclass-1].name);
 }
+#endif
 
 /**
  * avc_init - Initialize the AVC.
@@ -696,6 +698,7 @@ out:
 	return node;
 }
 
+#ifdef CONFIG_AUDIT
 /**
  * avc_audit_pre_callback - SELinux specific information
  * will be called by generic audit code
@@ -770,6 +773,7 @@ static noinline int slow_avc_audit(u32 ssid, u32 tsid, u16 tclass,
 	common_lsm_audit(a, avc_audit_pre_callback, avc_audit_post_callback);
 	return 0;
 }
+#endif
 
 static inline int avc_xperms_audit(u32 ssid, u32 tsid, u16 tclass,
 				u32 requested, struct av_decision *avd,
@@ -777,6 +781,7 @@ static inline int avc_xperms_audit(u32 ssid, u32 tsid, u16 tclass,
 				u8 perm, int result,
 				struct common_audit_data *ad)
 {
+#ifdef CONFIG_AUDIT
 	u32 audited, denied;
 
 	audited = avc_xperms_audit_required(
@@ -785,6 +790,9 @@ static inline int avc_xperms_audit(u32 ssid, u32 tsid, u16 tclass,
 		return 0;
 	return slow_avc_audit(ssid, tsid, tclass, requested,
 			audited, denied, result, ad, 0);
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -812,6 +820,7 @@ inline int avc_audit(u32 ssid, u32 tsid,
 	       struct av_decision *avd, int result, struct common_audit_data *a,
 	       unsigned flags)
 {
+#ifdef CONFIG_AUDIT
 	u32 denied, audited;
 	denied = requested & ~avd->allowed;
 	if (unlikely(denied)) {
@@ -846,6 +855,9 @@ inline int avc_audit(u32 ssid, u32 tsid,
 	return slow_avc_audit(ssid, tsid, tclass,
 		requested, audited, denied, result,
 		a, flags);
+#else
+	return 0;
+#endif
 }
 
 /**
