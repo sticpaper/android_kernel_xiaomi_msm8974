@@ -1,0 +1,16 @@
+###### Stic-Builder-Jenkins ######
+devices = cancro
+defconfig_a = cancro_defconfig
+aosp_defconfig_b = virgo_defconfig
+host = Tianjin-stic-server-open-host (builder@stic-server-sq183)
+toolchain = /home/work/devices/msm8974-kernel/android_xiaomi_msm8974_kernel/toolchain/
+# clang = null
+gcc = <toolchain>/google_arm32/bin/
+# aarch64_gcc = null
+arm32_gcc = <gcc>/arm-linux-androidkernel-
+text = "正在编译小米4"
+aosp_text = "正在编译小米4"
+error = "由于服务器硬盘空间不足,无法编译出包,暂停发布"
+aosp_text_error = "由于服务器硬盘空间不足,无法编译出包,暂停发布"
+out = /home/work/devices/msm8974-kernel/android_xiaomi_msm8974_kernel/out/boot.img
+###### Stic-Builder-Jenkins ######
