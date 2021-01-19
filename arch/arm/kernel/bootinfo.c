@@ -12,6 +12,8 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/fs.h>
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <linux/string.h>
 #include <linux/sysdev.h>
 #include <asm/setup.h>
@@ -164,6 +166,26 @@ static struct attribute_group attr_group = {
 	.attrs = g,
 };
 
+static int cpumaxfreq_show(struct seq_file *m, void *v)
+{
+    /* Xiaomi MSM8974 SOC CPUMAXFREQ 2457Mhz */
+	seq_printf(m, "2.45\n");
+
+	return 0;
+}
+
+static int cpumaxfreq_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, &cpumaxfreq_show, NULL);
+}
+
+static const struct file_operations proc_cpumaxfreq_operations = {
+	.open       = cpumaxfreq_open,
+	.read       = seq_read,
+	.llseek     = seq_lseek,
+	.release    = seq_release,
+};
+
 static int __init bootinfo_init(void)
 {
 	int ret = -ENOMEM;
@@ -179,6 +201,7 @@ static int __init bootinfo_init(void)
 		printk("bootinfo_init: subsystem_register failed\n");
 		goto sys_fail;
 	}
+	proc_create("cpumaxfreq", 0, NULL, &proc_cpumaxfreq_operations);
 
 	return ret;
 
