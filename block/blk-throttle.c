@@ -128,12 +128,8 @@ static inline int throtl_tg_##name(const struct throtl_grp *tg)		\
 
 THROTL_TG_FNS(on_rr);
 
-#define throtl_log_tg(td, tg, fmt, args...)				\
-	blk_add_trace_msg((td)->queue, "throtl %s " fmt,		\
-				blkg_path(&(tg)->blkg), ##args);      	\
-
-#define throtl_log(td, fmt, args...)	\
-	blk_add_trace_msg((td)->queue, "throtl " fmt, ##args)
+#define throtl_log_tg(td, tg, fmt, args...)
+#define throtl_log(td, fmt, args...)
 
 static inline struct throtl_grp *tg_of_blkg(struct blkio_group *blkg)
 {
