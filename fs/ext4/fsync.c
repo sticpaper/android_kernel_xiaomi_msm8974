@@ -2,6 +2,7 @@
  *  linux/fs/ext4/fsync.c
  *
  *  Copyright (C) 1993  Stephen Tweedie (sct@redhat.com)
+ *  Copyright (C) 2021 XiaoMi, Inc.
  *  from
  *  Copyright (C) 1992  Remy Card (card@masi.ibp.fr)
  *                      Laboratoire MASI - Institut Blaise Pascal
@@ -28,11 +29,15 @@
 #include <linux/writeback.h>
 #include <linux/jbd2.h>
 #include <linux/blkdev.h>
+#include <linux/cred.h>
+#include <linux/uidgid.h>
 
 #include "ext4.h"
 #include "ext4_jbd2.h"
 
 #include <trace/events/ext4.h>
+
+#define AID_SYSTEM 1000 /* system server */
 
 static void dump_completed_IO(struct inode * inode)
 {
@@ -260,6 +265,21 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 	if (journal->j_flags & JBD2_BARRIER &&
 	    !jbd2_trans_will_send_data_barrier(journal, commit_tid))
 		needs_barrier = true;
+
+	if (test_opt(inode->i_sb, ASYNC_FSYNC)) {
+		atomic_inc(&EXT4_SB(inode->i_sb)->s_total_fsync);
+
+		if (!uid_eq(GLOBAL_ROOT_UID, current_fsuid()) &&
+			  !(in_group_p(make_kgid(current_user_ns(), AID_SYSTEM)))) {
+			atomic_inc(&EXT4_SB(inode->i_sb)->s_async_fsync);
+
+			if (jbd2_transaction_need_wait(journal, commit_tid))
+				jbd2_log_start_commit(journal, commit_tid);
+
+			goto out;
+		}
+	}
+
 	jbd2_log_start_commit(journal, commit_tid);
 	ret = jbd2_log_wait_commit(journal, commit_tid);
 	if (needs_barrier)
