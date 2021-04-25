@@ -75,6 +75,20 @@ series
 cscope.*
 ncscope.*
 
+# kernel-out-files
+out
+
+# kernel-modules
+wireguard
+
+# kernel-build-tools
+toolchain
+phone_build.sh
+server_build.sh
+
+# other-files
+paper-kernel_debug
+
 # gnu global files
 GPATH
 GRTAGS
