@@ -1887,7 +1887,7 @@ config MSM_DEVFREQ_CPUBW
 
 config MSM_CPU_VOLTAGE_CONTROL
 	bool "Userspace CPU Voltage Control"
-	default y
+	default n
 	help
 	  This enables userspace CPU Voltage Control.
 
