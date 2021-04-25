@@ -1,0 +1,7 @@
+# PaperKernel Kconfig
+
+config PAPER_KERNEL_OTHER
+	tristate "Define Paper kernel changes"
+	default n
+	---help---
+	  Only used to distinguish different system changes.
