@@ -3371,7 +3371,7 @@ qpnp_batt_system_temp_level_set(struct qpnp_chg_chip *chip, int lvl_sel)
 	if (get_hw_version_major() != 4 && get_hw_version_major() != 5)
 		return;
 
-	pr_info("lvl %d\n", lvl_sel);
+	pr_debug("lvl %d\n", lvl_sel);
 
 	if (lvl_sel >= 0 && lvl_sel < chip->thermal_levels) {
 		chip->therm_lvl_sel = lvl_sel;
@@ -3871,7 +3871,7 @@ static void qpnp_chg_thermal_monitor_work(struct work_struct *work)
 	else
 		thermal_level = 6;
 
-	pr_info("temp %d lvl %d %d\n",
+	pr_debug("temp %d lvl %d %d\n",
 		batt_temp, last_thermal_level, thermal_level);
 
 	if (last_thermal_level != thermal_level)
