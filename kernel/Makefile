@@ -117,7 +117,7 @@ $(obj)/config_data.gz: $(KCONFIG_CONFIG) FORCE
 
       filechk_ikconfiggz = (echo "static const char kernel_config_data[] __used = MAGIC_START"; cat $< | scripts/bin2c; echo "MAGIC_END;")
 targets += config_data.h
-$(obj)/config_data.h: $(obj)/config_data.gz FORCE
+$(obj)/config_data.gz: arch/arm/configs/stock_defconfig FORCE
 	$(call filechk,ikconfiggz)
 
 $(obj)/time.o: $(obj)/timeconst.h
