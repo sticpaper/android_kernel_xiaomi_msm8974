@@ -75,6 +75,9 @@ series
 cscope.*
 ncscope.*
 
+# kernel-out-files
+out
+
 # gnu global files
 GPATH
 GRTAGS
