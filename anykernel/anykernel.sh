@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Kernel For Xiaomi cancro
+kernel.string=Kernel For Xiaomi msm8974 device
 do.devicecheck=1
 do.modules=0
 do.systemless=1
