@@ -996,7 +996,7 @@ static int estimate_ocv(struct qpnp_bms_chip *chip, int batt_temp)
 
 	ocv_est_uv = vbat_uv + (ibat_ua * rbatt_mohm) / 1000;
 	ocv_est_uv -= dropped_uv;
-	pr_info("estimated pon ocv = %d i%d v%d r%d d%d\n",
+	pr_debug("estimated pon ocv = %d i%d v%d r%d d%d\n",
 		ocv_est_uv, ibat_ua, vbat_uv, rbatt_mohm, dropped_uv);
 	return ocv_est_uv;
 }
@@ -1018,7 +1018,7 @@ static int read_saved_instant_ocv(struct qpnp_bms_chip *chip)
 		if (instant_ocv_mv > chip->max_voltage_uv / 1000)
 			instant_ocv_mv = chip->max_voltage_uv / 1000;
 
-		pr_info("read instant ocv %d reg %x\n", instant_ocv_mv, reg);
+		pr_debug("read instant ocv %d reg %x\n", instant_ocv_mv, reg);
 
 		return instant_ocv_mv;
 	}
@@ -1165,8 +1165,6 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 				|| warm_reset > 0) {
 			int instant_ocv_mv;
 
-			pr_info("OCV is stale or bad, estimating new OCV.\n");
-
 			instant_ocv_mv = read_saved_instant_ocv(chip);
 			pr_info("instant ocv %d\n", instant_ocv_mv);
 
@@ -1177,7 +1175,7 @@ static int read_soc_params_raw(struct qpnp_bms_chip *chip,
 
 			raw->last_good_ocv_uv = chip->last_ocv_uv;
 			reset_cc(chip, CLEAR_CC | CLEAR_SHDW_CC);
-			pr_info("New PON_OCV_UV = %d, cc = %llx\n",
+			pr_debug("New PON_OCV_UV = %d, cc = %llx\n",
 					chip->last_ocv_uv, raw->cc);
 		}
 	} else if (chip->new_battery) {
@@ -2301,7 +2299,7 @@ skip_limits:
 	soc = soc_new;
 
 out:
-	pr_info("s %d i %d v %d ocv %d rbatt %d uuc %d cc %d r %d t %d f %d\n",
+	pr_debug("s %d i %d v %d ocv %d rbatt %d uuc %d cc %d r %d t %d f %d\n",
 		soc, ibat_ua, vbat_uv, chip->last_ocv_uv,
 		params->rbatt_mohm,
 		params->uuc_uah,
@@ -2449,7 +2447,7 @@ static int calculate_raw_soc(struct qpnp_bms_chip *chip,
 		 * first time calcualtion and the pon ocv  is too low resulting
 		 * in a bad soc. Adjust ocv to get 0 soc
 		 */
-		pr_info("soc is %d, adjusting pon ocv to make it 0\n", soc);
+		pr_debug("soc is %d, adjusting pon ocv to make it 0\n", soc);
 		chip->last_ocv_uv = find_ocv_for_pc(chip, batt_temp,
 				find_pc_for_soc(chip, params, 0));
 		params->ocv_charge_uah = find_ocv_charge_for_soc(chip,
@@ -2470,12 +2468,12 @@ static int calculate_raw_soc(struct qpnp_bms_chip *chip,
 		soc = 100;
 
 	if (soc > BAD_SOC_THRESH && soc < 0) {
-		pr_info("bad rem_usb_chg = %d rem_chg %d, cc_uah %d, unusb_chg %d\n",
+		pr_debug("bad rem_usb_chg = %d rem_chg %d, cc_uah %d, unusb_chg %d\n",
 				remaining_usable_charge_uah,
 				params->ocv_charge_uah,
 				params->cc_uah, params->uuc_uah);
 
-		pr_info("for bad rem_usb_chg last_ocv_uv = %d batt_temp = %d fcc = %d soc =%d\n",
+		pr_debug("for bad rem_usb_chg last_ocv_uv = %d batt_temp = %d fcc = %d soc =%d\n",
 				chip->last_ocv_uv, batt_temp,
 				params->fcc_uah, soc);
 		soc = 0;
@@ -2521,7 +2519,7 @@ static int calculate_state_of_charge(struct qpnp_bms_chip *chip,
 		 * to adjust pon ocv since it is a small percent away from
 		 * the real soc
 		 */
-		pr_info("soc = %d before forcing shutdown_soc = %d\n",
+		pr_debug("soc = %d before forcing shutdown_soc = %d\n",
 							soc, shutdown_soc);
 		chip->last_ocv_uv = find_ocv_for_pc(chip, batt_temp,
 				find_pc_for_soc(chip, &params, shutdown_soc));
@@ -2536,7 +2534,7 @@ static int calculate_state_of_charge(struct qpnp_bms_chip *chip,
 					(params.fcc_uah
 						- params.uuc_uah));
 
-		pr_info("DONE for shutdown_soc = %d soc is %d, adjusted ocv to %duV\n",
+		pr_debug("DONE for shutdown_soc = %d soc is %d, adjusted ocv to %duV\n",
 				shutdown_soc, soc, chip->last_ocv_uv);
 	}
 	mutex_unlock(&chip->soc_invalidation_mutex);
@@ -4283,7 +4281,7 @@ static int refresh_die_temp_monitor(struct qpnp_bms_chip *chip)
 
 	rc = qpnp_vadc_read(chip->vadc_dev, DIE_TEMP, &result);
 
-	pr_info("low = %lld, high = %lld\n",
+	pr_debug("low = %lld, high = %lld\n",
 			result.physical - chip->temperature_margin,
 			result.physical + chip->temperature_margin);
 	chip->die_temp_monitor_params.high_temp = result.physical
@@ -4308,7 +4306,7 @@ static void btm_notify_die_temp(enum qpnp_tm_state state, void *ctx)
 		pr_debug("low state triggered\n");
 	else if (state == ADC_TM_HIGH_STATE)
 		pr_debug("high state triggered\n");
-	pr_info("die temp = %lld, raw = 0x%x\n",
+	pr_debug("die temp = %lld, raw = 0x%x\n",
 			result.physical, result.adc_code);
 	schedule_work(&chip->recalc_work);
 	refresh_die_temp_monitor(chip);

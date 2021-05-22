@@ -934,8 +934,6 @@ qpnp_chg_idcmax_set(struct qpnp_chg_chip *chip, int mA)
 		return -EINVAL;
 	}
 
-	pr_info("mA %d\n", mA);
-
 	if (mA == QPNP_CHG_I_MAX_MIN_100) {
 		dc = 0x00;
 		pr_debug("current=%d setting %02x\n", mA, dc);
@@ -1010,8 +1008,6 @@ qpnp_chg_iusbmax_set(struct qpnp_chg_chip *chip, int mA)
 		pr_err("bad mA=%d asked to set\n", mA);
 		return -EINVAL;
 	}
-
-	pr_info("mA %d\n", mA);
 
 	if (mA <= QPNP_CHG_I_MAX_MIN_100) {
 		usb_reg = 0x00;
@@ -1330,7 +1326,7 @@ qpnp_chg_vbatdet_set(struct qpnp_chg_chip *chip, int vbatdet_mv)
 	temp = (vbatdet_mv - QPNP_CHG_VBATDET_MIN_MV)
 			/ QPNP_CHG_VBATDET_STEP_MV;
 
-	pr_info("voltage=%d setting %02x\n", vbatdet_mv, temp);
+	pr_debug("voltage=%d setting %02x\n", vbatdet_mv, temp);
 	return qpnp_chg_write(chip, &temp,
 		chip->chgr_base + CHGR_VBAT_DET, 1);
 }
@@ -1393,13 +1389,13 @@ qpnp_chg_vbatdet_lo_irq_handler(int irq, void *_chip)
 	u8 chg_sts = 0;
 	int rc;
 
-	pr_info("vbatdet-lo triggered\n");
+	pr_debug("vbatdet-lo triggered\n");
 
 	rc = qpnp_chg_read(chip, &chg_sts, INT_RT_STS(chip->chgr_base), 1);
 	if (rc)
 		pr_err("failed to read chg_sts rc=%d\n", rc);
 
-	pr_info("chg_done chg_sts: 0x%x triggered\n", chg_sts);
+	pr_debug("chg_done chg_sts: 0x%x triggered\n", chg_sts);
 	if (!chip->charging_disabled && (chg_sts & FAST_CHG_ON_IRQ)) {
 		schedule_delayed_work(&chip->eoc_work,
 			msecs_to_jiffies(EOC_CHECK_PERIOD_MS));
@@ -1441,7 +1437,7 @@ qpnp_chg_usb_chg_gone_irq_handler(int irq, void *_chip)
 
 	usb_in = qpnp_chg_is_usb_chg_plugged_in(chip);
 
-	pr_info("chg_gone triggered, usb %d %x\n", usb_in, usb_sts);
+	pr_debug("chg_gone triggered, usb %d %x\n", usb_in, usb_sts);
 	if ((usb_in || qpnp_chg_is_dc_chg_plugged_in(chip))
 			&& (usb_sts & CHG_GONE_IRQ)) {
 		if (ext_ovp_isns_present) {
@@ -1747,7 +1743,7 @@ qpnp_chg_usb_usbin_valid_irq_handler(int irq, void *_chip)
 
 	usb_present = qpnp_chg_is_usb_chg_plugged_in(chip);
 	host_mode = qpnp_chg_is_otg_en_set(chip);
-	pr_info("usbin-valid triggered: %d host_mode: %d\n",
+	pr_debug("usbin-valid triggered: %d host_mode: %d\n",
 		usb_present, host_mode);
 
 	/* In host mode notifications cmoe from USB supply */
@@ -1894,7 +1890,7 @@ qpnp_chg_bat_if_batt_temp_irq_handler(int irq, void *_chip)
 	int batt_temp_good, batt_present, rc;
 
 	batt_temp_good = qpnp_chg_is_batt_temp_ok(chip);
-	pr_info("batt-temp triggered: %d\n", batt_temp_good);
+	pr_debug("batt-temp triggered: %d\n", batt_temp_good);
 
 	batt_present = qpnp_chg_is_batt_present(chip);
 	if (batt_present) {
@@ -1929,7 +1925,7 @@ qpnp_chg_bat_if_batt_pres_irq_handler(int irq, void *_chip)
 	int batt_present, batt_temp_good, rc;
 
 	batt_present = qpnp_chg_is_batt_present(chip);
-	pr_info("batt-pres triggered: %d\n", batt_present);
+	pr_debug("batt-pres triggered: %d\n", batt_present);
 
 	if (chip->batt_present ^ batt_present) {
 		if (batt_present) {
@@ -2001,7 +1997,7 @@ qpnp_chg_dc_dcin_valid_irq_handler(int irq, void *_chip)
 	int dc_present;
 
 	dc_present = qpnp_chg_is_dc_chg_plugged_in(chip);
-	pr_info("dcin-valid triggered: %d\n", dc_present);
+	pr_debug("dcin-valid triggered: %d\n", dc_present);
 
 	if (chip->dc_present ^ dc_present) {
 		chip->dc_present = dc_present;
@@ -2049,7 +2045,7 @@ qpnp_chg_chgr_chg_failed_irq_handler(int irq, void *_chip)
 	struct qpnp_chg_chip *chip = _chip;
 	int rc;
 
-	pr_info("chg_failed triggered\n");
+	pr_debug("chg_failed triggered\n");
 
 	rc = qpnp_chg_masked_write(chip,
 		chip->chgr_base + CHGR_CHG_FAILED,
@@ -2076,7 +2072,7 @@ qpnp_chg_chgr_chg_trklchg_irq_handler(int irq, void *_chip)
 {
 	struct qpnp_chg_chip *chip = _chip;
 
-	pr_info("TRKL IRQ triggered\n");
+	pr_debug("TRKL IRQ triggered\n");
 
 	chip->chg_done = false;
 	if (chip->bat_if_base) {
@@ -4021,7 +4017,7 @@ static void qpnp_invalid_charger_work(struct work_struct *work)
 	chip->usb_psy->get_property(chip->usb_psy,
 			POWER_SUPPLY_PROP_ONLINE, &ret);
 
-	pr_info("%s usb %d batt %d status %d usb online %d\n", __func__,
+	pr_debug("%s usb %d batt %d status %d usb online %d\n", __func__,
 			usb_present, batt_present, batt_status, ret.intval);
 	if (usb_present &&
 		batt_present &&
